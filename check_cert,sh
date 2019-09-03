@@ -1,0 +1,71 @@
+#!/bin/bash
+curdate=`date +%F_%T`
+curyear=`date +%Y`
+curmon=`date +%b`
+curday=`date +%d`
+
+
+filename=/u01/app/kpnful/scripts/check_cert_url.data
+logfile=/u01/app/kpnful/scripts/check_cert_$curdate.html
+
+echo "<html>" >> $logfile
+echo "<body>" >> $logfile
+echo "<head><style>table, th, td {border: 1px solid black;margin-left:auto;margin-right:auto;}</style></head>" >>$logfile
+echo "<table>" >> $logfile
+echo "<caption><b><center>Periphery Certificate Expiry Monitoring</center></b></caption>" >>$logfile
+echo "<tr>" >> $logfile
+echo "<th>System</th>" >> $logfile
+echo "<th>Certificate Status</th>" >> $logfile
+echo "<th>Expiry Date</th>" >> $logfile
+echo "</tr>" >> $logfile
+
+while read line; do
+echo "<tr>" >> $logfile
+echo "<td>$line</td>" >> $logfile
+exp_date=`echo | openssl s_client -connect eaiprd.telecom.ptt.nl:9181 2>/dev/null | openssl x509 -noout -enddate|cut -d "=" -f 2`
+echo $exp_date
+exp_month=`echo $exp_date|cut -d " " -f 1`
+echo $exp_month
+exp_year=`echo $exp_date|cut -d " " -f 4`
+echo $exp_year
+exp_day=`echo $exp_date|cut -d " " -f 2`
+echo $exp_day
+cn=`echo | openssl s_client -connect eaiprd.telecom.ptt.nl:9181 2>/dev/null | openssl x509 -noout -subject|cut -d "=" -f 8`
+echo $cn
+if [ $exp_year -eq $curyear ];then
+	echo "Same year"
+	if [ $exp_month -eq $curmon ];then
+		echo "Same Month"
+		echo "<td>WARNING</font></td><td>$exp_date</td>" >> $logfile
+		if [ $exp_day -eq $curday ];then
+			echo "Same Day"
+			echo "<td><font color="red">CRITICAL</font></td><td>$exp_date</td>" >> $logfile
+		else
+			echo "Different Day"
+			echo "<td><font color="orange">WARNING</font></td><td>$exp_date</td>" >> $logfile
+		fi
+	else
+		echo "Different Month"
+	fi	
+else
+	echo "Different Year"
+	echo "<td><font color="green">NORMAL</font></td><td>$exp_date</td>" >> $logfile
+fi
+if [ $exp_month == $curmon ];then
+	echo "Same Month"
+	
+else
+	echo "Different Month"
+fi
+if [ $exp_day -eq $curday ];then
+	echo "Same Day"
+	
+else
+	echo "Different Day"
+fi
+	
+echo "</tr>" >> $logfile
+done < $filename
+echo "</table>" >> $logfile
+echo "</body>" >> $logfile
+echo "</html>" >> $logfile
