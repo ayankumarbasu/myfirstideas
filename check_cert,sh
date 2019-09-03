@@ -5,8 +5,8 @@ curmon=`date +%b`
 curday=`date +%d`
 
 
-filename=/u01/app/kpnful/scripts/check_cert_url.data
-logfile=/u01/app/kpnful/scripts/check_cert_$curdate.html
+filename=$HOME/check_cert_url.data
+logfile=$HOME/check_cert_$curdate.html
 
 echo "<html>" >> $logfile
 echo "<body>" >> $logfile
